@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Higher-order conversion function as per requirements
+    // Higher-order conversion function
     const createConverter = (fromUnit, toUnit) => {
         const conversions = {
             // Weight conversions
@@ -25,35 +25,39 @@ document.addEventListener('DOMContentLoaded', () => {
             'fahrenheit-celsius': value => (value - 32) * 5/9
         };
 
-        const converter = conversions[`${fromUnit}-${toUnit}`];
-        
-        // Return arrow function that handles both single values and arrays
-        return (input) => {
+        const key = `${fromUnit.toLowerCase()}-${toUnit.toLowerCase()}`;
+        const converter = conversions[key];
+
+        return converter ? (input) => {
             if (Array.isArray(input)) {
-                return input.map(val => Number(converter(val)).toFixed(2));
+                return input.map(val => parseFloat(converter(val).toFixed(2)));
             }
-            return Number(converter(input)).toFixed(2);
-        };
+            return parseFloat(converter(input).toFixed(2));
+        } : () => "Invalid Conversion";
     };
 
-    // Function to handle form submission
+    // Function to handle conversion
     const handleConversion = (inputId, fromId, toId, resultId) => {
-        const input = document.getElementById(inputId).value;
+        const input = document.getElementById(inputId).value.trim();
         const fromUnit = document.getElementById(fromId).value;
         const toUnit = document.getElementById(toId).value;
         const resultDiv = document.getElementById(resultId);
 
         try {
-            // Check if input contains multiple values
+            if (!input) {
+                throw new Error('Please enter a value to convert.');
+            }
+
+            // Convert comma-separated input into an array or a single number
             const values = input.includes(',') ? 
                 input.split(',').map(v => parseFloat(v.trim())) :
                 parseFloat(input);
 
             // Validate input
             if (Array.isArray(values) && values.some(isNaN)) {
-                throw new Error('Please enter valid numbers separated by commas');
+                throw new Error('Please enter valid numbers separated by commas.');
             } else if (!Array.isArray(values) && isNaN(values)) {
-                throw new Error('Please enter a valid number');
+                throw new Error('Please enter a valid number.');
             }
 
             // Create and use converter
@@ -61,11 +65,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = converter(values);
 
             // Display results
-            if (Array.isArray(result)) {
-                resultDiv.textContent = `Results: ${result.join(', ')} ${toUnit}`;
-            } else {
-                resultDiv.textContent = `Result: ${result} ${toUnit}`;
-            }
+            resultDiv.textContent = Array.isArray(result) 
+                ? `Results: ${result.join(', ')} ${toUnit}`
+                : `Result: ${result} ${toUnit}`;
         } catch (error) {
             resultDiv.textContent = error.message;
         }
