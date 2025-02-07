@@ -11,7 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Higher-order conversion function
     const createConverter = (fromUnit, toUnit) => {
         const conversions = {
             // Weight conversions
